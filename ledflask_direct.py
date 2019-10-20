@@ -193,7 +193,7 @@ def schedule_thread():
     while True:
         if len(schedule) > 0:
             update = schedule.pop(0)
-            if update[0] > time.time():
+            if update[0] < time.time():
                 updates = update[1]
                 updates_arr = updates.split(",")
                 for i in range(0, len(updates_arr) - 3, 4):
