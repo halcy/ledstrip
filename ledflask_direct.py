@@ -77,6 +77,12 @@ def root():
 <h3>http://halcy.de:9000/set_many?updates=(led1),(r1),(g1),(b1),(led2)....</h3>
 <p>Set (led1) to colour (r1), (g1), (b1), set (led2) to colour (r2), (g2), (b2) et cetera, parameter types and ranges as above. Parameter array can be as long as you want. Accepts POST requests. Recommended for dramatically less flicker.</p>
 
+<h3>http://halcy.de:9000/set_many_sched?updates=(led1),(r1),(g1),(b1),(led2)....&at=(time)</h3>
+<p>Like set_many but schedules the update to occur at the given unix timestamp that is not in the past and no more than 30 seconds in the future. A maximum of 1000 events can be scheduled at any time.</p>
+
+<h3>http://halcy.de:9000/time</h3>
+<p>Returns current serverside unix time.</p>
+
 <h2>I can't see what I'm doing this is bull shit</h2>
 twitch: <a href="https://www.twitch.tv/h4lcy">https://www.twitch.tv/h4lcy</a>
 
@@ -161,7 +167,8 @@ def scheduled():
         if not updates is None and not at is None:
             at = float(at)
             if at > time.time() and at - time.time() < 30:
-                schedule.append((at, updates))
+                if len(schedule) < 1000:
+                    schedule.append((at, updates))
             else:
                 return("no")
     except:
@@ -186,7 +193,7 @@ def schedule_thread():
     while True:
         if len(schedule) > 0:
             update = schedule.pop(0)
-            if update > time.time():
+            if update[0] > time.time():
                 updates = update[1]
                 updates_arr = updates.split(",")
                 for i in range(0, len(updates_arr) - 3, 4):
