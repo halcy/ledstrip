@@ -27,6 +27,10 @@ ATTRACT_TIMEOUT = 15 # how many seconds of no activity until attract mode starts
 strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
 strip.begin()
 
+# Scheduling
+manager = multiprocessing.Manager()
+schedule = manager.list()
+
 # Blast-colours-to-strip process, reading from a state array
 col_state = multiprocessing.Array('d', [0] * LED_COUNT * 3)
 def set_led_state():
@@ -145,6 +149,25 @@ def set_single(led, r, g, b, from_attract = False):
     
     return("ok")
 
+@app.route("/time")
+def get_time():
+    return str(time.time())
+
+@app.route("/set_many_sched")
+def scheduled():
+    try:
+        at = request.args.get("at")
+        updates = request.args.get("updates")
+        if not updates is None and not at is None:
+            at = float(at)
+            if at > time.time() and at - time.time() < 30:
+                schedule.append((at, updates))
+            else:
+                return("no")
+    except:
+        return("no")
+    return("ok")
+    
 # Set many leds at once
 @app.route("/set_many", methods=["GET","POST"])
 def set_many():
@@ -158,6 +181,26 @@ def set_many():
             b = updates_arr[i + 3]
             set_single(led, r, g, b)
     return "ok"
+
+def schedule_thread():
+    while True:
+        if len(schedule) > 0:
+            update = schedule.pop(0)
+            if update > time.time():
+                updates = update[1]
+                updates_arr = updates.split(",")
+                for i in range(0, len(updates_arr) - 3, 4):
+                    led = updates_arr[i]
+                    r = updates_arr[i + 1]
+                    g = updates_arr[i + 2]
+                    b = updates_arr[i + 3]
+                    set_single(led, r, g, b)
+            else:
+                schedule.append(update)
+
+schedule_process = multiprocessing.Process(target = schedule_thread)
+schedule_process.start()
+
 
 # "Attract mode" process (rainbow) that turns on at ATTRACT_TIMEOUT seconds of no activity
 def wheel(pos):
