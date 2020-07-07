@@ -52,7 +52,7 @@ try:
             fairies = list(filter(lambda fa: fa.age < len(ramp2), fairies))
 
             if random.random()*TIMESTEP > .03:
-                fairy = namedtuple('Fairy', ['pos', 'age'])
+                fairy = Fairy()
                 fairy.age = 0
                 fairy.pos = random.randint(0, LED_COUNT)
                 fairies.append(fairy)
