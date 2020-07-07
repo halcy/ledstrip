@@ -66,7 +66,7 @@ try:
                     r,g,b = (0,0,0)
                 if fairy.pos > 0:
                     updates = updates + ",{},{},{},{}".format(fairy.pos-1,r,g,b)
-                if fairy.pos < LED_COUNT-2:
+                if fairy.pos < LED_COUNT-1:
                     updates = updates + ",{},{},{},{}".format(fairy.pos+1,r,g,b)
 
             for fairy in fairies:
